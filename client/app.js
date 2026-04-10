@@ -458,5 +458,42 @@ function showToast(message) {
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+// ===== Auth =====
+async function checkAuth() {
+  try {
+    const res = await fetch(`${API}/api/auth/check`);
+    if (res.status === 401) {
+      window.location.href = '/login.html';
+      return false;
+    }
+    return true;
+  } catch {
+    return true; // if endpoint doesn't exist, allow
+  }
+}
+
+async function logout() {
+  try {
+    await fetch(`${API}/api/logout`, { method: 'POST' });
+  } catch {}
+  window.location.href = '/login.html';
+}
+
+// Wrap fetch to handle 401 globally
+const _origFetch = window.fetch;
+window.fetch = async (...args) => {
+  const res = await _origFetch(...args);
+  if (res.status === 401 && !args[0]?.toString().includes('/api/auth/check')) {
+    window.location.href = '/login.html';
+  }
+  return res;
+};
+
 // ===== Init =====
-fetchImages();
+(async () => {
+  const authed = await checkAuth();
+  if (authed) fetchImages();
+})();
+
+// Logout button
+$('#logoutBtn')?.addEventListener('click', logout);

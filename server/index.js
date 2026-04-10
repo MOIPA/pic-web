@@ -2,12 +2,20 @@ const express = require('express');
 const multer = require('multer');
 const sharp = require('sharp');
 const cors = require('cors');
+const session = require('express-session');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// ===== Auth Config =====
+// Set via environment variables or use defaults
+// Usage: GALLERY_USERS='{"admin":"yourpassword"}' node index.js
+const USERS = JSON.parse(process.env.GALLERY_USERS || '{"admin":"admin123"}');
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
 // Ensure upload directories exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -16,16 +24,97 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 fs.mkdirSync(thumbsDir, { recursive: true });
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Serve uploaded files
-app.use('/uploads', express.static(uploadsDir));
+// Session
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'lax'
+  }
+}));
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, '..', 'client')));
+// ===== Auth Routes (no auth required) =====
+const clientDir = path.join(__dirname, '..', 'client');
 
-// Image metadata store (in-memory, persisted to JSON file)
+// Serve login page (always accessible)
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(clientDir, 'login.html'));
+});
+
+// Login API
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, error: 'Username and password required' });
+  }
+
+  if (USERS[username] && USERS[username] === password) {
+    req.session.user = username;
+    return res.json({ success: true, username });
+  }
+
+  res.status(401).json({ success: false, error: 'Invalid username or password' });
+});
+
+// Auth check API
+app.get('/api/auth/check', (req, res) => {
+  if (req.session.user) {
+    return res.json({ success: true, username: req.session.user });
+  }
+  res.status(401).json({ success: false });
+});
+
+// Logout API
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.json({ success: true });
+  });
+});
+
+// ===== Auth Middleware =====
+function requireAuth(req, res, next) {
+  if (req.session.user) return next();
+  return res.status(401).json({ success: false, error: 'Authentication required' });
+}
+
+function requireAuthPage(req, res, next) {
+  if (req.session.user) return next();
+  if (req.accepts('html')) return res.redirect('/login.html');
+  return res.status(401).json({ success: false, error: 'Authentication required' });
+}
+
+// Protect uploaded files
+app.use('/uploads', requireAuthPage, express.static(uploadsDir));
+
+// Protect all other frontend pages (except login.html, and static assets needed for login)
+app.use((req, res, next) => {
+  // Allow login page assets
+  if (req.path === '/login.html') return next();
+  // Don't interfere with API routes (handled separately below)
+  if (req.path.startsWith('/api/')) return next();
+
+  // For HTML page requests, check auth
+  if (req.path === '/' || req.path === '/index.html') {
+    if (!req.session.user) return res.redirect('/login.html');
+  }
+
+  next();
+});
+
+// Serve frontend (after auth check for index)
+app.use(express.static(clientDir));
+
+// Protect all API routes below
+app.use('/api', requireAuth);
+
+// ===== Image metadata =====
 const metaFile = path.join(uploadsDir, 'meta.json');
 let images = [];
 
@@ -70,7 +159,7 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
-// POST /api/upload - Upload images
+// POST /api/upload
 app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
   try {
     const results = [];
@@ -82,10 +171,8 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
       const thumbFilename = `thumb_${filename}`;
       const thumbPath = path.join(thumbsDir, thumbFilename);
 
-      // Get image dimensions
       const metadata = await sharp(originalPath).metadata();
 
-      // Generate thumbnail (max width 400px, maintain aspect ratio)
       await sharp(originalPath)
         .resize({ width: 400, withoutEnlargement: true })
         .jpeg({ quality: 80 })
@@ -121,7 +208,7 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
   }
 });
 
-// GET /api/images - Get all images (with optional category filter)
+// GET /api/images
 app.get('/api/images', (req, res) => {
   let result = images;
   if (req.query.category) {
@@ -130,7 +217,7 @@ app.get('/api/images', (req, res) => {
   res.json({ success: true, images: result });
 });
 
-// PATCH /api/images/:id - Update image metadata (favorite, category)
+// PATCH /api/images/:id
 app.patch('/api/images/:id', (req, res) => {
   const { id } = req.params;
   const image = images.find(img => img.id === id);
@@ -139,18 +226,14 @@ app.patch('/api/images/:id', (req, res) => {
     return res.status(404).json({ success: false, error: 'Image not found' });
   }
 
-  if (req.body.favorite !== undefined) {
-    image.favorite = !!req.body.favorite;
-  }
-  if (req.body.category !== undefined) {
-    image.category = req.body.category;
-  }
+  if (req.body.favorite !== undefined) image.favorite = !!req.body.favorite;
+  if (req.body.category !== undefined) image.category = req.body.category;
 
   saveMeta();
   res.json({ success: true, image });
 });
 
-// DELETE /api/images/:id - Delete an image
+// DELETE /api/images/:id
 app.delete('/api/images/:id', (req, res) => {
   const { id } = req.params;
   const index = images.findIndex(img => img.id === id);
@@ -160,8 +243,6 @@ app.delete('/api/images/:id', (req, res) => {
   }
 
   const image = images[index];
-
-  // Delete files
   const originalPath = path.join(uploadsDir, image.filename);
   const thumbPath = path.join(thumbsDir, `thumb_${image.filename}`);
 
@@ -174,7 +255,7 @@ app.delete('/api/images/:id', (req, res) => {
   res.json({ success: true });
 });
 
-// Error handling for multer
+// Error handling
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ success: false, error: err.message });
@@ -187,5 +268,8 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`\n  Photo Gallery Server is running!`);
-  console.log(`  Open http://localhost:${PORT} in your browser\n`);
+  console.log(`  Open http://localhost:${PORT} in your browser`);
+  console.log(`  Default login: admin / admin123`);
+  console.log(`  Set GALLERY_USERS env to customize, e.g.:`);
+  console.log(`  GALLERY_USERS='{"myuser":"mypass"}' node index.js\n`);
 });

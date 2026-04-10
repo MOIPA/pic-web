@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Photo Gallery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FAF6F0;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(139,105,20,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(107,79,16,0.05) 0%, transparent 50%);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: #FFFDF8;
+      border: 1px solid #E8DFD0;
+      border-radius: 16px;
+      padding: 40px 32px;
+      box-shadow: 0 8px 32px rgba(62,44,28,0.08);
+    }
+
+    .login-brand {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-brand svg {
+      color: #8B6914;
+      margin-bottom: 12px;
+    }
+
+    .login-brand h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #8B6914, #6B4F10);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-brand p {
+      font-size: 14px;
+      color: #8C7B6B;
+      margin-top: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3E2C1C;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #E8DFD0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #FAF6F0;
+      color: #3E2C1C;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .form-group input:focus {
+      border-color: #8B6914;
+      box-shadow: 0 0 0 3px rgba(139,105,20,0.1);
+      background: #FFFDF8;
+    }
+
+    .form-group input::placeholder { color: #B8A898; }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #8B6914;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 4px;
+    }
+
+    .login-btn:hover {
+      background: #A67C28;
+      box-shadow: 0 4px 12px rgba(139,105,20,0.25);
+      transform: translateY(-1px);
+    }
+
+    .login-btn:active { transform: translateY(0); }
+
+    .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-error {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(192,57,43,0.06);
+      border: 1px solid rgba(192,57,43,0.15);
+      border-radius: 8px;
+      color: #C0392B;
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+
+    .login-error.show { display: block; }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #B8A898;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="40" height="40">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <h1>Photo Gallery</h1>
+        <p>Sign in to access your photos</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter username" autocomplete="username" required autofocus>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+        <div class="login-error" id="loginError">Invalid username or password</div>
+      </form>
+    </div>
+    <div class="login-footer">Private photo gallery</div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = '/';
+        } else {
+          errorEl.textContent = data.error || 'Invalid username or password';
+          errorEl.classList.add('show');
+        }
+      } catch (err) {
+        errorEl.textContent = 'Connection error, please try again';
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+
+    // If already logged in, redirect to home
+    fetch('/api/auth/check').then(res => {
+      if (res.ok) window.location.href = '/';
+    }).catch(() => {});
+  </script>
+</body>
+</html>

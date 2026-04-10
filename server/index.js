@@ -172,6 +172,11 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
       const thumbFilename = `thumb_${filename}`;
       const thumbPath = path.join(thumbsDir, thumbFilename);
 
+      // Auto-rotate based on EXIF orientation, then get dimensions
+      const rotatedPath = path.join(uploadsDir, `rot_${filename}`);
+      await sharp(originalPath).rotate().toFile(rotatedPath);
+      fs.renameSync(rotatedPath, originalPath);
+
       const metadata = await sharp(originalPath).metadata();
 
       await sharp(originalPath)

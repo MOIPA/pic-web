@@ -58,7 +58,7 @@
         <div class="section-title sidebar-label">Categories</div>
         <div class="category-list" id="categoryList">
           <a class="category-item active" data-category="all" href="#">
-            <span class="cat-dot" style="background:#8B6914"></span>
+            <span class="cat-dot" style="background:var(--color-primary)"></span>
             <span class="sidebar-label">All Photos</span>
           </a>
           <a class="category-item" data-category="landscape" href="#">
@@ -99,6 +99,13 @@
           <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/>
         </svg>
         <span class="sidebar-label"><span id="statsText">0 photos</span></span>
+      </div>
+      <div class="theme-switcher">
+        <span class="theme-switcher-label sidebar-label">Theme</span>
+        <div class="theme-dot active" data-theme="indigo" title="Indigo"></div>
+        <div class="theme-dot" data-theme="coffee" title="Coffee"></div>
+        <div class="theme-dot" data-theme="forest" title="Forest"></div>
+        <div class="theme-dot" data-theme="rose" title="Rose"></div>
       </div>
       <button class="sidebar-logout-btn" id="logoutBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">

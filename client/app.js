@@ -329,6 +329,24 @@ function closeSidebarMobile() {
 
 $('#sidebarBackdrop').addEventListener('click', closeSidebarMobile);
 
+// ===== Theme Switcher =====
+function applyTheme(theme) {
+  if (theme && theme !== 'indigo') {
+    document.documentElement.setAttribute('data-theme', theme);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  $$('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === (theme || 'indigo')));
+  localStorage.setItem('theme', theme || 'indigo');
+}
+
+// Init theme from localStorage
+applyTheme(localStorage.getItem('theme') || 'indigo');
+
+$$('.theme-dot').forEach(dot => {
+  dot.addEventListener('click', () => applyTheme(dot.dataset.theme));
+});
+
 // ===== Upload Modal =====
 function openUploadModal() {
   uploadOverlay.classList.add('active');

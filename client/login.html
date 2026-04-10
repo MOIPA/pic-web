@@ -9,140 +9,125 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root, [data-theme="indigo"] {
+      --lp: #6366f1; --lp-light: #818cf8; --lp-dark: #4f46e5; --lp-rgb: 99,102,241;
+      --lbg: #f8f9fb; --lsurf: #ffffff; --lborder: #e5e7eb;
+      --ltext: #1a1a2e; --ltext2: #6b7280;
+    }
+    [data-theme="coffee"] {
+      --lp: #8B6914; --lp-light: #A67C28; --lp-dark: #6B4F10; --lp-rgb: 139,105,20;
+      --lbg: #FAF6F0; --lsurf: #FFFDF8; --lborder: #E8DFD0;
+      --ltext: #3E2C1C; --ltext2: #8C7B6B;
+    }
+    [data-theme="forest"] {
+      --lp: #059669; --lp-light: #10b981; --lp-dark: #047857; --lp-rgb: 5,150,105;
+      --lbg: #f0fdf4; --lsurf: #f8fffe; --lborder: #d1e7dd;
+      --ltext: #1a2e1a; --ltext2: #5f7a6b;
+    }
+    [data-theme="rose"] {
+      --lp: #e11d48; --lp-light: #f43f5e; --lp-dark: #be123c; --lp-rgb: 225,29,72;
+      --lbg: #fff1f2; --lsurf: #fffbfc; --lborder: #fecdd3;
+      --ltext: #2e1a1e; --ltext2: #8b6b72;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #FAF6F0;
+      background: var(--lbg);
       background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(139,105,20,0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(107,79,16,0.05) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(var(--lp-rgb),0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(var(--lp-rgb),0.04) 0%, transparent 50%);
     }
 
-    .login-container {
-      width: 100%;
-      max-width: 400px;
-      padding: 20px;
-    }
+    .login-container { width: 100%; max-width: 400px; padding: 20px; }
 
     .login-card {
-      background: #FFFDF8;
-      border: 1px solid #E8DFD0;
+      background: var(--lsurf);
+      border: 1px solid var(--lborder);
       border-radius: 16px;
       padding: 40px 32px;
-      box-shadow: 0 8px 32px rgba(62,44,28,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.06);
     }
 
-    .login-brand {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .login-brand svg {
-      color: #8B6914;
-      margin-bottom: 12px;
-    }
+    .login-brand { text-align: center; margin-bottom: 32px; }
+    .login-brand svg { color: var(--lp); margin-bottom: 12px; }
 
     .login-brand h1 {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #8B6914, #6B4F10);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 24px; font-weight: 700;
+      background: linear-gradient(135deg, var(--lp), var(--lp-dark));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
 
-    .login-brand p {
-      font-size: 14px;
-      color: #8C7B6B;
-      margin-top: 6px;
-    }
+    .login-brand p { font-size: 14px; color: var(--ltext2); margin-top: 6px; }
 
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: #3E2C1C;
-      margin-bottom: 6px;
-    }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--ltext); margin-bottom: 6px; }
 
     .form-group input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1px solid #E8DFD0;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      background: #FAF6F0;
-      color: #3E2C1C;
-      outline: none;
-      transition: all 0.25s ease;
+      width: 100%; padding: 11px 14px; border: 1px solid var(--lborder); border-radius: 8px;
+      font-size: 14px; font-family: inherit; background: var(--lbg); color: var(--ltext);
+      outline: none; transition: all 0.25s ease;
     }
 
     .form-group input:focus {
-      border-color: #8B6914;
-      box-shadow: 0 0 0 3px rgba(139,105,20,0.1);
-      background: #FFFDF8;
+      border-color: var(--lp);
+      box-shadow: 0 0 0 3px rgba(var(--lp-rgb),0.1);
+      background: var(--lsurf);
     }
 
-    .form-group input::placeholder { color: #B8A898; }
+    .form-group input::placeholder { color: var(--ltext2); opacity: 0.6; }
 
     .login-btn {
-      width: 100%;
-      padding: 12px;
-      background: #8B6914;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      margin-top: 4px;
+      width: 100%; padding: 12px; background: var(--lp); color: #fff; border: none;
+      border-radius: 8px; font-size: 15px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.25s ease; margin-top: 4px;
     }
 
     .login-btn:hover {
-      background: #A67C28;
-      box-shadow: 0 4px 12px rgba(139,105,20,0.25);
+      background: var(--lp-light);
+      box-shadow: 0 4px 12px rgba(var(--lp-rgb),0.25);
       transform: translateY(-1px);
     }
 
     .login-btn:active { transform: translateY(0); }
-
-    .login-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     .login-error {
-      margin-top: 14px;
-      padding: 10px 14px;
-      background: rgba(192,57,43,0.06);
-      border: 1px solid rgba(192,57,43,0.15);
-      border-radius: 8px;
-      color: #C0392B;
-      font-size: 13px;
-      text-align: center;
-      display: none;
+      margin-top: 14px; padding: 10px 14px;
+      background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.15);
+      border-radius: 8px; color: #dc2626; font-size: 13px; text-align: center; display: none;
     }
-
     .login-error.show { display: block; }
 
     .login-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
-      color: #B8A898;
+      text-align: center; margin-top: 24px; font-size: 12px; color: var(--ltext2);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
     }
+
+    .login-themes {
+      display: flex; gap: 8px;
+    }
+    .login-theme-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid transparent; cursor: pointer; transition: all 0.2s;
+    }
+    .login-theme-dot:hover { transform: scale(1.2); }
+    .login-theme-dot.active { border-color: var(--ltext); box-shadow: 0 0 0 2px var(--lbg), 0 0 0 4px var(--ltext); }
+    .login-theme-dot[data-theme="indigo"] { background: #6366f1; }
+    .login-theme-dot[data-theme="coffee"] { background: #8B6914; }
+    .login-theme-dot[data-theme="forest"] { background: #059669; }
+    .login-theme-dot[data-theme="rose"]   { background: #e11d48; }
   </style>
+  <script>
+    // Apply saved theme immediately to prevent flash
+    (function() {
+      var t = localStorage.getItem('theme');
+      if (t && t !== 'indigo') document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 </head>
 <body>
   <div class="login-container">
@@ -170,10 +155,39 @@
         <div class="login-error" id="loginError">Invalid username or password</div>
       </form>
     </div>
-    <div class="login-footer">Private photo gallery</div>
+    <div class="login-footer">
+      <span>Private photo gallery</span>
+      <div class="login-themes">
+        <div class="login-theme-dot" data-theme="indigo" title="Indigo"></div>
+        <div class="login-theme-dot" data-theme="coffee" title="Coffee"></div>
+        <div class="login-theme-dot" data-theme="forest" title="Forest"></div>
+        <div class="login-theme-dot" data-theme="rose" title="Rose"></div>
+      </div>
+    </div>
   </div>
 
   <script>
+    // Theme switcher
+    function applyLoginTheme(theme) {
+      if (theme && theme !== 'indigo') {
+        document.documentElement.setAttribute('data-theme', theme);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        theme = 'indigo';
+      }
+      document.querySelectorAll('.login-theme-dot').forEach(d =>
+        d.classList.toggle('active', d.dataset.theme === theme)
+      );
+      localStorage.setItem('theme', theme);
+    }
+
+    applyLoginTheme(localStorage.getItem('theme') || 'indigo');
+
+    document.querySelectorAll('.login-theme-dot').forEach(dot => {
+      dot.addEventListener('click', () => applyLoginTheme(dot.dataset.theme));
+    });
+
+    // Login form
     const form = document.getElementById('loginForm');
     const errorEl = document.getElementById('loginError');
     const btn = document.getElementById('loginBtn');

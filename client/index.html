@@ -6,46 +6,245 @@
   <title>Photo Gallery</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="nav-brand">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="3" width="18" height="18" rx="2"/>
-        <circle cx="8.5" cy="8.5" r="1.5"/>
-        <path d="M21 15l-5-5L5 21"/>
-      </svg>
-      <span>Photo Gallery</span>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <span class="brand-text">Gallery</span>
+      </div>
+
+      <button class="sidebar-upload-btn" id="sidebarUploadBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span class="sidebar-label">Upload</span>
+      </button>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-page="home" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          <span class="sidebar-label">Home</span>
+        </a>
+        <a class="nav-item" data-page="explore" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          </svg>
+          <span class="sidebar-label">Explore</span>
+        </a>
+        <a class="nav-item" data-page="favorites" href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+          <span class="sidebar-label">Favorites</span>
+          <span class="nav-badge" id="favCount" style="display:none">0</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="section-title sidebar-label">Categories</div>
+        <div class="category-list" id="categoryList">
+          <a class="category-item active" data-category="all" href="#">
+            <span class="cat-dot" style="background:#6366f1"></span>
+            <span class="sidebar-label">All Photos</span>
+          </a>
+          <a class="category-item" data-category="landscape" href="#">
+            <span class="cat-dot" style="background:#22c55e"></span>
+            <span class="sidebar-label">Landscape</span>
+          </a>
+          <a class="category-item" data-category="portrait" href="#">
+            <span class="cat-dot" style="background:#f59e0b"></span>
+            <span class="sidebar-label">Portrait</span>
+          </a>
+          <a class="category-item" data-category="nature" href="#">
+            <span class="cat-dot" style="background:#10b981"></span>
+            <span class="sidebar-label">Nature</span>
+          </a>
+          <a class="category-item" data-category="urban" href="#">
+            <span class="cat-dot" style="background:#8b5cf6"></span>
+            <span class="sidebar-label">Urban</span>
+          </a>
+          <a class="category-item" data-category="food" href="#">
+            <span class="cat-dot" style="background:#ef4444"></span>
+            <span class="sidebar-label">Food</span>
+          </a>
+          <a class="category-item" data-category="travel" href="#">
+            <span class="cat-dot" style="background:#06b6d4"></span>
+            <span class="sidebar-label">Travel</span>
+          </a>
+          <a class="category-item" data-category="other" href="#">
+            <span class="cat-dot" style="background:#94a3b8"></span>
+            <span class="sidebar-label">Other</span>
+          </a>
+        </div>
+      </div>
     </div>
-    <div class="nav-actions">
-      <span class="image-count" id="imageCount">0 photos</span>
-      <button class="btn-upload" id="uploadBtn">
+
+    <div class="sidebar-bottom">
+      <div class="storage-stats" id="storageStats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/>
+        </svg>
+        <span class="sidebar-label"><span id="statsText">0 photos</span></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Header -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="hamburger" id="hamburgerBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span class="mobile-brand">Gallery</span>
+    <button class="mobile-upload-btn" id="mobileUploadBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </header>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search photos..." autocomplete="off">
+      </div>
+      <div class="topbar-actions">
+        <div class="sort-select">
+          <select id="sortSelect">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name">Name</option>
+            <option value="size">Size</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" data-cols="3" title="3 columns">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <rect x="3" y="3" width="5" height="8" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1"/><rect x="17" y="3" width="5" height="10" rx="1"/>
+              <rect x="3" y="13" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="8" rx="1"/><rect x="17" y="15" width="5" height="5" rx="1"/>
+            </svg>
+          </button>
+          <button class="view-btn" data-cols="4" title="4 columns">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <rect x="2" y="3" width="4" height="6" rx="1"/><rect x="8" y="3" width="4" height="4" rx="1"/><rect x="14" y="3" width="4" height="8" rx="1"/><rect x="20" y="3" width="2" height="5" rx="1"/>
+              <rect x="2" y="11" width="4" height="4" rx="1"/><rect x="8" y="9" width="4" height="6" rx="1"/><rect x="14" y="13" width="4" height="4" rx="1"/><rect x="20" y="10" width="2" height="6" rx="1"/>
+            </svg>
+          </button>
+        </div>
+        <div class="topbar-avatar">
+          <div class="avatar-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="hero" id="hero" style="display:none">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1>Your Photo Collection</h1>
+        <p id="heroStats">0 photos uploaded</p>
+      </div>
+    </div>
+
+    <!-- Category Tags (mobile/top) -->
+    <div class="tags-bar" id="tagsBar">
+      <button class="tag-pill active" data-category="all">All</button>
+      <button class="tag-pill" data-category="landscape">Landscape</button>
+      <button class="tag-pill" data-category="portrait">Portrait</button>
+      <button class="tag-pill" data-category="nature">Nature</button>
+      <button class="tag-pill" data-category="urban">Urban</button>
+      <button class="tag-pill" data-category="food">Food</button>
+      <button class="tag-pill" data-category="travel">Travel</button>
+      <button class="tag-pill" data-category="other">Other</button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-illustration">
+        <svg viewBox="0 0 120 120" fill="none" width="120" height="120">
+          <rect x="10" y="20" width="100" height="80" rx="8" stroke="#d1d5db" stroke-width="2" fill="#f9fafb"/>
+          <circle cx="35" cy="45" r="8" stroke="#d1d5db" stroke-width="2" fill="#f3f4f6"/>
+          <path d="M10 80l25-20 20 15 25-30 30 35" stroke="#d1d5db" stroke-width="2" fill="none"/>
+          <path d="M50 55l5-3 8 6" stroke="#d1d5db" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <h2>No photos yet</h2>
+      <p>Upload your beautiful photos to start building your gallery</p>
+      <button class="btn-primary" id="emptyUploadBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        Upload
+        Upload Photos
       </button>
     </div>
-  </nav>
 
-  <!-- Upload Area (hidden by default) -->
+    <!-- Waterfall Gallery -->
+    <div class="gallery" id="gallery"></div>
+  </main>
+
+  <!-- Upload Modal -->
   <div class="upload-overlay" id="uploadOverlay">
     <div class="upload-modal">
-      <button class="upload-close" id="uploadClose">&times;</button>
+      <div class="upload-header">
+        <h2>Upload Photos</h2>
+        <button class="upload-close" id="uploadClose">&times;</button>
+      </div>
       <div class="upload-dropzone" id="dropzone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="56" height="56">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
-        <h3>Drop images here</h3>
-        <p>or click to select files</p>
-        <p class="upload-hint">Supports JPG, PNG, GIF, WebP (max 50MB)</p>
+        <h3>Drag & drop your images here</h3>
+        <p>or click to browse files</p>
+        <p class="upload-hint">JPG, PNG, GIF, WebP up to 50MB each</p>
         <input type="file" id="fileInput" multiple accept="image/*" hidden>
+      </div>
+      <div class="upload-category">
+        <label>Category</label>
+        <select id="uploadCategory">
+          <option value="">None</option>
+          <option value="landscape">Landscape</option>
+          <option value="portrait">Portrait</option>
+          <option value="nature">Nature</option>
+          <option value="urban">Urban</option>
+          <option value="food">Food</option>
+          <option value="travel">Travel</option>
+          <option value="other">Other</option>
+        </select>
       </div>
       <div class="upload-progress" id="uploadProgress" style="display:none">
         <div class="progress-bar">
@@ -68,47 +267,43 @@
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" id="emptyState">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" width="80" height="80">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="M21 15l-5-5L5 21"/>
-    </svg>
-    <h2>No photos yet</h2>
-    <p>Upload your first photos to get started</p>
-    <button class="btn-upload" id="emptyUploadBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-        <polyline points="17 8 12 3 7 8"/>
-        <line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-      Upload Photos
-    </button>
-  </div>
-
-  <!-- Waterfall Gallery -->
-  <main class="gallery" id="gallery"></main>
-
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightboxClose">&times;</button>
     <button class="lightbox-nav lightbox-prev" id="lightboxPrev">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
     <button class="lightbox-nav lightbox-next" id="lightboxNext">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
         <polyline points="9 6 15 12 9 18"/>
       </svg>
     </button>
     <div class="lightbox-content">
       <img id="lightboxImg" src="" alt="">
     </div>
-    <div class="lightbox-info" id="lightboxInfo">
-      <span class="lightbox-filename" id="lightboxFilename"></span>
-      <span class="lightbox-dimensions" id="lightboxDimensions"></span>
+    <div class="lightbox-bottom">
+      <div class="lightbox-info">
+        <span class="lightbox-filename" id="lightboxFilename"></span>
+        <span class="lightbox-sep">|</span>
+        <span class="lightbox-dimensions" id="lightboxDimensions"></span>
+        <span class="lightbox-sep" id="lightboxCatSep" style="display:none">|</span>
+        <span class="lightbox-category" id="lightboxCategory"></span>
+      </div>
+      <div class="lightbox-actions">
+        <button class="lightbox-btn" id="lightboxFavBtn" title="Favorite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </button>
+        <button class="lightbox-btn" id="lightboxDeleteBtn" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 

@@ -74,6 +74,7 @@ const upload = multer({
 app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
   try {
     const results = [];
+    const category = req.body.category || '';
 
     for (const file of req.files) {
       const filename = file.filename;
@@ -103,6 +104,8 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
         size: file.size,
         url: `/uploads/${filename}`,
         thumbUrl: `/uploads/thumbnails/${thumbFilename}`,
+        category: category,
+        favorite: false,
         uploadedAt: new Date().toISOString()
       };
 
@@ -118,9 +121,33 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
   }
 });
 
-// GET /api/images - Get all images
+// GET /api/images - Get all images (with optional category filter)
 app.get('/api/images', (req, res) => {
-  res.json({ success: true, images });
+  let result = images;
+  if (req.query.category) {
+    result = images.filter(img => img.category === req.query.category);
+  }
+  res.json({ success: true, images: result });
+});
+
+// PATCH /api/images/:id - Update image metadata (favorite, category)
+app.patch('/api/images/:id', (req, res) => {
+  const { id } = req.params;
+  const image = images.find(img => img.id === id);
+
+  if (!image) {
+    return res.status(404).json({ success: false, error: 'Image not found' });
+  }
+
+  if (req.body.favorite !== undefined) {
+    image.favorite = !!req.body.favorite;
+  }
+  if (req.body.category !== undefined) {
+    image.category = req.body.category;
+  }
+
+  saveMeta();
+  res.json({ success: true, image });
 });
 
 // DELETE /api/images/:id - Delete an image

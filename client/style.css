@@ -806,10 +806,11 @@ a { text-decoration: none; color: inherit; }
   z-index: 200;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: all 0.3s ease;
 }
 
-.upload-overlay.active { opacity: 1; visibility: visible; }
+.upload-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
 
 .upload-modal {
   background: var(--color-surface);
@@ -981,10 +982,11 @@ a { text-decoration: none; color: inherit; }
   justify-content: center;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: all 0.2s ease;
 }
 
-.drag-overlay.active { opacity: 1; visibility: visible; }
+.drag-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
 
 .drag-content { text-align: center; color: #fff; }
 .drag-content h2 { margin-top: 16px; font-size: 28px; font-weight: 500; }
@@ -1001,10 +1003,11 @@ a { text-decoration: none; color: inherit; }
   flex-direction: column;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: all 0.3s ease;
 }
 
-.lightbox.active { opacity: 1; visibility: visible; }
+.lightbox.active { opacity: 1; visibility: visible; pointer-events: auto; }
 
 .lightbox-close {
   position: absolute;

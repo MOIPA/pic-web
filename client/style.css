@@ -913,6 +913,38 @@ a { text-decoration: none; color: inherit; }
 
 .upload-category select:focus { border-color: var(--color-primary); }
 
+.upload-location {
+  padding: 0 24px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-location label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.upload-location input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+}
+
+.upload-location input:focus { border-color: var(--color-primary); }
+.upload-location input::placeholder { color: var(--color-text-secondary); opacity: 0.5; }
+
 .upload-progress { padding: 0 24px 24px; }
 
 .progress-bar {
@@ -1054,6 +1086,24 @@ a { text-decoration: none; color: inherit; }
 
 .lightbox-sep { opacity: 0.3; }
 .lightbox-category { color: var(--color-primary-light); }
+.lightbox-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255,255,255,0.8);
+}
+.lightbox-location svg { opacity: 0.7; }
+
+.card-info-bottom .card-location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  font-size: 11px;
+  backdrop-filter: blur(4px);
+}
 
 .lightbox-actions {
   display: flex;

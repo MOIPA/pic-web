@@ -32,6 +32,9 @@ const lightboxFilename = $('#lightboxFilename');
 const lightboxDimensions = $('#lightboxDimensions');
 const lightboxCategory = $('#lightboxCategory');
 const lightboxCatSep = $('#lightboxCatSep');
+const lightboxLocSep = $('#lightboxLocSep');
+const lightboxLocation = $('#lightboxLocation');
+const lightboxLocationText = $('#lightboxLocationText');
 const lightboxFavBtn = $('#lightboxFavBtn');
 const lightboxDeleteBtn = $('#lightboxDeleteBtn');
 const searchInput = $('#searchInput');
@@ -59,6 +62,8 @@ async function uploadFiles(files) {
   for (const file of files) formData.append('photos', file);
   const cat = uploadCategory.value;
   if (cat) formData.append('category', cat);
+  const loc = $('#uploadLocation').value.trim();
+  if (loc) formData.append('location', loc);
 
   uploadProgress.style.display = 'block';
   progressFill.style.width = '0%';
@@ -146,7 +151,8 @@ function applyFilters() {
     const q = searchQuery.toLowerCase();
     list = list.filter(img =>
       img.originalName.toLowerCase().includes(q) ||
-      (img.category && img.category.toLowerCase().includes(q))
+      (img.category && img.category.toLowerCase().includes(q)) ||
+      (img.location && img.location.toLowerCase().includes(q))
     );
   }
 
@@ -229,6 +235,7 @@ function render() {
             <span>${img.width}\u00D7${img.height}</span>
             <span>${dateStr}</span>
             ${img.category ? `<span class="card-category-badge">${img.category}</span>` : ''}
+            ${img.location ? `<span class="card-location-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${img.location}</span>` : ''}
           </div>
         </div>
       </div>
@@ -352,6 +359,7 @@ function openUploadModal() {
   uploadOverlay.classList.add('active');
   uploadProgress.style.display = 'none';
   uploadCategory.value = currentCategory !== 'all' ? currentCategory : '';
+  $('#uploadLocation').value = '';
 }
 
 function closeUploadModal() {
@@ -413,6 +421,16 @@ function updateLightbox() {
   } else {
     lightboxCategory.textContent = '';
     lightboxCatSep.style.display = 'none';
+  }
+
+  if (img.location) {
+    lightboxLocationText.textContent = img.location;
+    lightboxLocSep.style.display = '';
+    lightboxLocation.style.display = '';
+  } else {
+    lightboxLocationText.textContent = '';
+    lightboxLocSep.style.display = 'none';
+    lightboxLocation.style.display = 'none';
   }
 
   lightboxFavBtn.classList.toggle('active', !!img.favorite);

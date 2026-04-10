@@ -261,6 +261,16 @@
           <option value="other">Other</option>
         </select>
       </div>
+      <div class="upload-location">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Location
+        </label>
+        <input type="text" id="uploadLocation" placeholder="e.g. Tokyo, Japan" autocomplete="off">
+      </div>
       <div class="upload-progress" id="uploadProgress" style="display:none">
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
@@ -305,6 +315,14 @@
         <span class="lightbox-dimensions" id="lightboxDimensions"></span>
         <span class="lightbox-sep" id="lightboxCatSep" style="display:none">|</span>
         <span class="lightbox-category" id="lightboxCategory"></span>
+        <span class="lightbox-sep" id="lightboxLocSep" style="display:none">|</span>
+        <span class="lightbox-location" id="lightboxLocation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span id="lightboxLocationText"></span>
+        </span>
       </div>
       <div class="lightbox-actions">
         <button class="lightbox-btn" id="lightboxFavBtn" title="Favorite">

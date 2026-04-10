@@ -164,6 +164,7 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
   try {
     const results = [];
     const category = req.body.category || '';
+    const location = req.body.location || '';
 
     for (const file of req.files) {
       const filename = file.filename;
@@ -192,6 +193,7 @@ app.post('/api/upload', upload.array('photos', 20), async (req, res) => {
         url: `/uploads/${filename}`,
         thumbUrl: `/uploads/thumbnails/${thumbFilename}`,
         category: category,
+        location: location,
         favorite: false,
         uploadedAt: new Date().toISOString()
       };
@@ -228,6 +230,7 @@ app.patch('/api/images/:id', (req, res) => {
 
   if (req.body.favorite !== undefined) image.favorite = !!req.body.favorite;
   if (req.body.category !== undefined) image.category = req.body.category;
+  if (req.body.location !== undefined) image.location = req.body.location;
 
   saveMeta();
   res.json({ success: true, image });

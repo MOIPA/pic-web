@@ -243,7 +243,8 @@ function render() {
 
     card.addEventListener('click', (e) => {
       if (e.target.closest('.card-btn')) return;
-      openLightbox(index);
+      const idx = filteredImages.findIndex(i => i.id === img.id);
+      openLightbox(idx);
     });
 
     card.querySelector('.btn-fav').addEventListener('click', (e) => {

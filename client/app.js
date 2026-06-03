@@ -412,7 +412,20 @@ function closeLightbox() {
 function updateLightbox() {
   if (currentLightboxIndex < 0 || currentLightboxIndex >= filteredImages.length) return;
   const img = filteredImages[currentLightboxIndex];
+
+  // Hide the image until the new one finishes loading; otherwise the browser
+  // keeps painting the previously-decoded image while the metadata text below
+  // already shows the new photo, so users see "wrong photo" with right caption.
+  lightboxImg.style.opacity = '0';
+  lightboxImg.onload = () => { lightboxImg.style.opacity = '1'; };
+  lightboxImg.onerror = () => { lightboxImg.style.opacity = '1'; };
   lightboxImg.src = img.url;
+  // If the new image is already cached, complete is true synchronously and
+  // onload may not fire \u2014 reveal it right away in that case.
+  if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
+    lightboxImg.style.opacity = '1';
+  }
+
   lightboxFilename.textContent = img.originalName;
   lightboxDimensions.textContent = `${img.width} \u00D7 ${img.height}`;
 

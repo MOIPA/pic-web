@@ -1065,6 +1065,7 @@ a { text-decoration: none; color: inherit; }
   max-height: 78vh;
   object-fit: contain;
   border-radius: 4px;
+  transition: opacity 0.18s ease;
 }
 
 .lightbox-bottom {

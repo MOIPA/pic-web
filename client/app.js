@@ -1,9 +1,11 @@
 // ===== State =====
 let images = [];
 let filteredImages = [];
+let lightboxList = [];          // photos visible in current view (excludes group covers)
 let currentLightboxIndex = -1;
 let currentPage = 'home';
 let currentCategory = 'all';
+let currentGroup = null;        // null = no group filter; string = inside a group
 let searchQuery = '';
 let sortMode = 'newest';
 let columnCount = 3;
@@ -35,11 +37,19 @@ const lightboxCatSep = $('#lightboxCatSep');
 const lightboxLocSep = $('#lightboxLocSep');
 const lightboxLocation = $('#lightboxLocation');
 const lightboxLocationText = $('#lightboxLocationText');
+const lightboxGroup = $('#lightboxGroup');
+const lightboxGroupSep = $('#lightboxGroupSep');
+const lightboxGroupText = $('#lightboxGroupText');
+const lightboxGroupEditBtn = $('#lightboxGroupEditBtn');
+const lightboxRating = $('#lightboxRating');
 const lightboxFavBtn = $('#lightboxFavBtn');
 const lightboxDeleteBtn = $('#lightboxDeleteBtn');
 const searchInput = $('#searchInput');
 const sortSelect = $('#sortSelect');
 const sidebar = $('#sidebar');
+const backToHomeBtn = $('#backToHomeBtn');
+const backToHomeLabel = $('#backToHomeLabel');
+const groupSuggestions = $('#groupSuggestions');
 
 // ===== API =====
 const API = '';
@@ -64,6 +74,8 @@ async function uploadFiles(files) {
   if (cat) formData.append('category', cat);
   const loc = $('#uploadLocation').value.trim();
   if (loc) formData.append('location', loc);
+  const grp = $('#uploadGroup').value.trim();
+  if (grp) formData.append('group', grp);
 
   uploadProgress.style.display = 'block';
   progressFill.style.width = '0%';
@@ -132,6 +144,53 @@ async function toggleFavorite(id) {
   }
 }
 
+async function setRating(id, value) {
+  const img = images.find(i => i.id === id);
+  if (!img) return;
+  // Clicking the same star again resets to 0 (common toggle UX)
+  const next = (img.rating || 0) === value ? 0 : value;
+  try {
+    const res = await fetch(`${API}/api/images/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: next })
+    });
+    const data = await res.json();
+    if (data.success) {
+      img.rating = data.image && typeof data.image.rating === 'number' ? data.image.rating : next;
+      applyFilters();
+      // Re-sync the lightbox stars without flicker
+      if (currentLightboxIndex >= 0 && lightboxList[currentLightboxIndex]?.id === id) {
+        renderLightboxStars(img.rating);
+      }
+    }
+  } catch (err) {
+    showToast('Rating failed');
+  }
+}
+
+async function setGroup(id, value) {
+  const img = images.find(i => i.id === id);
+  if (!img) return;
+  try {
+    const res = await fetch(`${API}/api/images/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: value })
+    });
+    const data = await res.json();
+    if (data.success) {
+      img.group = data.image && typeof data.image.group === 'string' ? data.image.group : value;
+      applyFilters();
+      if (currentLightboxIndex >= 0 && lightboxList[currentLightboxIndex]?.id === id) {
+        updateLightbox();
+      }
+    }
+  } catch (err) {
+    showToast('Update failed');
+  }
+}
+
 // ===== Filter & Sort =====
 function applyFilters() {
   let list = [...images];
@@ -146,13 +205,19 @@ function applyFilters() {
     list = list.filter(img => img.category === currentCategory);
   }
 
+  // Group filter (when user has clicked into a group cover)
+  if (currentGroup !== null) {
+    list = list.filter(img => (img.group || '') === currentGroup);
+  }
+
   // Search
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     list = list.filter(img =>
       img.originalName.toLowerCase().includes(q) ||
       (img.category && img.category.toLowerCase().includes(q)) ||
-      (img.location && img.location.toLowerCase().includes(q))
+      (img.location && img.location.toLowerCase().includes(q)) ||
+      (img.group && img.group.toLowerCase().includes(q))
     );
   }
 
@@ -161,19 +226,86 @@ function applyFilters() {
     case 'oldest': list.sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt)); break;
     case 'name': list.sort((a, b) => a.originalName.localeCompare(b.originalName)); break;
     case 'size': list.sort((a, b) => b.size - a.size); break;
+    case 'rating': list.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (new Date(b.uploadedAt) - new Date(a.uploadedAt))); break;
     default: list.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
   }
 
   filteredImages = list;
+  syncBackButton();
+  rebuildGroupSuggestions();
   render();
+}
+
+function syncBackButton() {
+  if (currentGroup !== null) {
+    backToHomeBtn.style.display = '';
+    backToHomeLabel.textContent = currentGroup;
+  } else {
+    backToHomeBtn.style.display = 'none';
+  }
+}
+
+function rebuildGroupSuggestions() {
+  if (!groupSuggestions) return;
+  const seen = new Set();
+  const names = [];
+  for (const img of images) {
+    const g = (img.group || '').trim();
+    if (g && !seen.has(g)) { seen.add(g); names.push(g); }
+  }
+  names.sort((a, b) => a.localeCompare(b));
+  groupSuggestions.innerHTML = names.map(n => `<option value="${escapeAttr(n)}">`).join('');
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Build the home view's display list: stack photos that share a group into a
+// single "group cover" card. Other views (favorites, inside-a-group, search,
+// non-"all" category) render flat.
+function buildDisplayList() {
+  const isStackedView = currentPage === 'home' && currentGroup === null && !searchQuery && currentCategory === 'all';
+  if (!isStackedView) {
+    return filteredImages.map(img => ({ kind: 'photo', img }));
+  }
+  const out = [];
+  const groupMap = new Map(); // groupName -> { kind:'group', name, items, cover, position }
+  for (const img of filteredImages) {
+    const g = (img.group || '').trim();
+    if (!g) {
+      out.push({ kind: 'photo', img });
+      continue;
+    }
+    let entry = groupMap.get(g);
+    if (!entry) {
+      entry = { kind: 'group', name: g, items: [], cover: img };
+      groupMap.set(g, entry);
+      out.push(entry); // preserves the position of the first photo in the group
+    }
+    entry.items.push(img);
+  }
+  return out;
 }
 
 // ===== Render =====
 function render() {
-  const hasImages = filteredImages.length > 0;
+  const displayList = buildDisplayList();
+  // lightboxList only contains real photos in the current display order, so
+  // openLightbox(idx) maps cleanly to the user's visible card sequence.
+  lightboxList = [];
+  for (const entry of displayList) {
+    if (entry.kind === 'photo') lightboxList.push(entry.img);
+    // group covers don't open the lightbox directly \u2014 clicking enters group view
+  }
+
+  const hasItems = displayList.length > 0;
   const totalImages = images.length;
-  emptyState.classList.toggle('hidden', hasImages);
-  gallery.classList.toggle('hidden', !hasImages);
+  emptyState.classList.toggle('hidden', hasItems);
+  gallery.classList.toggle('hidden', !hasItems);
 
   // Stats
   const totalSize = images.reduce((s, i) => s + (i.size || 0), 0);
@@ -186,8 +318,8 @@ function render() {
   favCount.style.display = favTotal > 0 ? '' : 'none';
   favCount.textContent = favTotal;
 
-  // Hero
-  if (totalImages > 0) {
+  // Hero \u2014 only on top-level home (not while inside a group)
+  if (totalImages > 0 && currentGroup === null) {
     hero.style.display = '';
     const heroImg = images[0];
     heroBg.style.backgroundImage = `url(${heroImg.thumbUrl})`;
@@ -200,65 +332,117 @@ function render() {
 
   // Cards
   gallery.innerHTML = '';
-  filteredImages.forEach((img, index) => {
-    const card = document.createElement('div');
-    card.className = 'image-card';
-    card.style.animationDelay = `${Math.min(index * 0.04, 0.4)}s`;
+  displayList.forEach((entry, index) => {
+    if (entry.kind === 'group') {
+      gallery.appendChild(renderGroupCard(entry, index));
+    } else {
+      gallery.appendChild(renderPhotoCard(entry.img, index));
+    }
+  });
+}
 
-    const ratio = (img.thumbHeight / img.thumbWidth) * 100;
-    card.style.paddingBottom = ratio + '%';
-    card.style.position = 'relative';
+function renderPhotoCard(img, index) {
+  const card = document.createElement('div');
+  card.className = 'image-card';
+  card.style.animationDelay = `${Math.min(index * 0.04, 0.4)}s`;
 
-    const dateStr = new Date(img.uploadedAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+  const ratio = (img.thumbHeight / img.thumbWidth) * 100;
+  card.style.paddingBottom = ratio + '%';
+  card.style.position = 'relative';
 
-    card.innerHTML = `
-      <img src="${img.thumbUrl}" alt="${img.originalName}" loading="lazy"
-        style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
-        onload="this.parentElement.style.background='transparent'">
-      <div class="card-overlay">
-        <div class="card-actions-top">
-          <button class="card-btn btn-fav${img.favorite ? ' active' : ''}" data-id="${img.id}" title="Favorite">
-            <svg viewBox="0 0 24 24" fill="${img.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
-          <button class="card-btn btn-card-delete" data-id="${img.id}" title="Delete">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-            </svg>
-          </button>
-        </div>
-        <div class="card-info-bottom">
-          <div class="card-filename">${img.originalName}</div>
-          <div class="card-meta">
-            <span>${img.width}\u00D7${img.height}</span>
-            <span>${dateStr}</span>
-            ${img.category ? `<span class="card-category-badge">${img.category}</span>` : ''}
-            ${img.location ? `<span class="card-location-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${img.location}</span>` : ''}
-          </div>
+  const dateStr = new Date(img.uploadedAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+  const rating = img.rating || 0;
+
+  card.innerHTML = `
+    <img src="${img.thumbUrl}" alt="${escapeAttr(img.originalName)}" loading="lazy"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+      onload="this.parentElement.style.background='transparent'">
+    <div class="card-overlay">
+      <div class="card-actions-top">
+        <button class="card-btn btn-fav${img.favorite ? ' active' : ''}" data-id="${img.id}" title="Favorite">
+          <svg viewBox="0 0 24 24" fill="${img.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </button>
+        <button class="card-btn btn-card-delete" data-id="${img.id}" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-info-bottom">
+        <div class="card-filename">${escapeHtml(img.originalName)}</div>
+        <div class="card-meta">
+          <span>${img.width}\u00D7${img.height}</span>
+          <span>${dateStr}</span>
+          ${img.category ? `<span class="card-category-badge">${escapeHtml(img.category)}</span>` : ''}
+          ${img.location ? `<span class="card-location-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(img.location)}</span>` : ''}
+          ${img.group ? `<span class="card-group-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>${escapeHtml(img.group)}</span>` : ''}
+          ${rating > 0 ? `<span class="card-rating-badge">\u2605 ${rating}</span>` : ''}
         </div>
       </div>
-    `;
+    </div>
+  `;
 
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.card-btn')) return;
-      const idx = filteredImages.findIndex(i => i.id === img.id);
-      openLightbox(idx);
-    });
-
-    card.querySelector('.btn-fav').addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleFavorite(img.id);
-    });
-
-    card.querySelector('.btn-card-delete').addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (confirm('Delete this photo?')) deleteImage(img.id);
-    });
-
-    gallery.appendChild(card);
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.card-btn')) return;
+    const idx = lightboxList.findIndex(i => i.id === img.id);
+    if (idx >= 0) openLightbox(idx);
   });
+
+  card.querySelector('.btn-fav').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFavorite(img.id);
+  });
+
+  card.querySelector('.btn-card-delete').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (confirm('Delete this photo?')) deleteImage(img.id);
+  });
+
+  return card;
+}
+
+function renderGroupCard(entry, index) {
+  const cover = entry.cover;
+  const card = document.createElement('div');
+  card.className = 'image-card group-card';
+  card.style.animationDelay = `${Math.min(index * 0.04, 0.4)}s`;
+
+  const ratio = (cover.thumbHeight / cover.thumbWidth) * 100;
+  card.style.paddingBottom = ratio + '%';
+  card.style.position = 'relative';
+
+  card.innerHTML = `
+    <img src="${cover.thumbUrl}" alt="${escapeAttr(entry.name)}" loading="lazy"
+      style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+      onload="this.parentElement.style.background='transparent'">
+    <span class="group-stack-edge group-stack-edge--2"></span>
+    <span class="group-stack-edge group-stack-edge--1"></span>
+    <div class="group-cover-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+      </svg>
+      <span>${entry.items.length} \u5F20</span>
+    </div>
+    <div class="card-overlay">
+      <div class="card-info-bottom">
+        <div class="card-filename">${escapeHtml(entry.name)}</div>
+        <div class="card-meta">
+          <span>\u5171 ${entry.items.length} \u5F20</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => {
+    currentGroup = entry.name;
+    applyFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  return card;
 }
 
 // ===== Sidebar Nav =====
@@ -269,6 +453,7 @@ $$('.nav-item').forEach(item => {
     item.classList.add('active');
     currentPage = item.dataset.page;
     if (currentPage !== 'favorites') currentCategory = 'all';
+    currentGroup = null;
     syncCategoryUI();
     applyFilters();
     closeSidebarMobile();
@@ -285,6 +470,7 @@ $$('.category-item').forEach(item => {
   item.addEventListener('click', (e) => {
     e.preventDefault();
     currentCategory = item.dataset.category;
+    currentGroup = null;
     syncCategoryUI();
     applyFilters();
   });
@@ -293,6 +479,7 @@ $$('.category-item').forEach(item => {
 $$('.tag-pill').forEach(pill => {
   pill.addEventListener('click', () => {
     currentCategory = pill.dataset.category;
+    currentGroup = null;
     syncCategoryUI();
     applyFilters();
   });
@@ -361,6 +548,7 @@ function openUploadModal() {
   uploadProgress.style.display = 'none';
   uploadCategory.value = currentCategory !== 'all' ? currentCategory : '';
   $('#uploadLocation').value = '';
+  $('#uploadGroup').value = currentGroup || '';
 }
 
 function closeUploadModal() {
@@ -410,8 +598,8 @@ function closeLightbox() {
 }
 
 function updateLightbox() {
-  if (currentLightboxIndex < 0 || currentLightboxIndex >= filteredImages.length) return;
-  const img = filteredImages[currentLightboxIndex];
+  if (currentLightboxIndex < 0 || currentLightboxIndex >= lightboxList.length) return;
+  const img = lightboxList[currentLightboxIndex];
 
   // Hide the image until the new one finishes loading; otherwise the browser
   // keeps painting the previously-decoded image while the metadata text below
@@ -447,18 +635,36 @@ function updateLightbox() {
     lightboxLocation.style.display = 'none';
   }
 
+  if (img.group) {
+    lightboxGroupText.textContent = img.group;
+    lightboxGroupSep.style.display = '';
+    lightboxGroup.style.display = '';
+  } else {
+    lightboxGroupText.textContent = '';
+    lightboxGroupSep.style.display = 'none';
+    lightboxGroup.style.display = 'none';
+  }
+
+  renderLightboxStars(img.rating || 0);
   lightboxFavBtn.classList.toggle('active', !!img.favorite);
 }
 
+function renderLightboxStars(rating) {
+  $$('#lightboxRating .lb-star').forEach(btn => {
+    const v = parseInt(btn.dataset.value, 10);
+    btn.classList.toggle('active', v <= rating);
+  });
+}
+
 function lightboxPrev() {
-  if (filteredImages.length === 0) return;
-  currentLightboxIndex = (currentLightboxIndex - 1 + filteredImages.length) % filteredImages.length;
+  if (lightboxList.length === 0) return;
+  currentLightboxIndex = (currentLightboxIndex - 1 + lightboxList.length) % lightboxList.length;
   updateLightbox();
 }
 
 function lightboxNext() {
-  if (filteredImages.length === 0) return;
-  currentLightboxIndex = (currentLightboxIndex + 1) % filteredImages.length;
+  if (lightboxList.length === 0) return;
+  currentLightboxIndex = (currentLightboxIndex + 1) % lightboxList.length;
   updateLightbox();
 }
 
@@ -468,19 +674,46 @@ $('#lightboxNext').addEventListener('click', lightboxNext);
 
 lightboxFavBtn.addEventListener('click', () => {
   if (currentLightboxIndex >= 0) {
-    const img = filteredImages[currentLightboxIndex];
+    const img = lightboxList[currentLightboxIndex];
     toggleFavorite(img.id);
   }
 });
 
 lightboxDeleteBtn.addEventListener('click', () => {
   if (currentLightboxIndex >= 0) {
-    const img = filteredImages[currentLightboxIndex];
+    const img = lightboxList[currentLightboxIndex];
     if (confirm('Delete this photo?')) {
       deleteImage(img.id);
       closeLightbox();
     }
   }
+});
+
+// Star rating: click any star sets that rating; click the same value again resets to 0
+lightboxRating.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lb-star');
+  if (!btn) return;
+  if (currentLightboxIndex < 0) return;
+  const img = lightboxList[currentLightboxIndex];
+  const value = parseInt(btn.dataset.value, 10);
+  setRating(img.id, value);
+});
+
+// Edit group from inside the lightbox
+lightboxGroupEditBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentLightboxIndex < 0) return;
+  const img = lightboxList[currentLightboxIndex];
+  const next = prompt('Group name (leave empty to ungroup):', img.group || '');
+  if (next === null) return; // user cancelled
+  setGroup(img.id, next.trim());
+});
+
+// Back-to-home button (visible while inside a group)
+backToHomeBtn.addEventListener('click', () => {
+  currentGroup = null;
+  applyFilters();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 lightbox.addEventListener('click', (e) => {

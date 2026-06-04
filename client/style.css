@@ -794,6 +794,28 @@ a { text-decoration: none; color: inherit; }
   backdrop-filter: blur(4px);
 }
 
+.card-info-bottom .card-group-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  font-size: 11px;
+  backdrop-filter: blur(4px);
+}
+
+.card-info-bottom .card-rating-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(250, 204, 21, 0.85);
+  color: #1a1a1a;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: none;
+}
+
 /* ===== Upload Overlay ===== */
 .upload-overlay {
   position: fixed;
@@ -945,6 +967,70 @@ a { text-decoration: none; color: inherit; }
 
 .upload-location input:focus { border-color: var(--color-primary); }
 .upload-location input::placeholder { color: var(--color-text-secondary); opacity: 0.5; }
+
+.upload-group {
+  padding: 0 24px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.upload-group input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+}
+
+.upload-group input:focus { border-color: var(--color-primary); }
+.upload-group input::placeholder { color: var(--color-text-secondary); opacity: 0.5; }
+
+.upload-group {
+  padding: 0 24px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.upload-group input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+}
+
+.upload-group input:focus { border-color: var(--color-primary); }
+.upload-group input::placeholder { color: var(--color-text-secondary); opacity: 0.5; }
 
 .upload-progress { padding: 0 24px 24px; }
 
@@ -1107,6 +1193,153 @@ a { text-decoration: none; color: inherit; }
   border-radius: 10px;
   font-size: 11px;
   backdrop-filter: blur(4px);
+}
+
+/* ===== Group cover (stacked card) ===== */
+.image-card.group-card {
+  cursor: pointer;
+}
+
+.image-card.group-card:hover .group-cover-badge {
+  background: var(--color-primary);
+}
+
+.group-stack-edge {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  z-index: -1;
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.group-stack-edge--1 {
+  transform: translate(4px, 4px);
+}
+
+.group-stack-edge--2 {
+  transform: translate(8px, 8px);
+  opacity: 0.7;
+}
+
+.image-card.group-card:hover .group-stack-edge--1 {
+  transform: translate(6px, 6px);
+}
+.image-card.group-card:hover .group-stack-edge--2 {
+  transform: translate(12px, 12px);
+}
+
+.group-cover-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease;
+}
+
+/* ===== Top bar back button ===== */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.back-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Lightbox group + stars ===== */
+.lightbox-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255,255,255,0.8);
+}
+.lightbox-group svg { opacity: 0.7; }
+
+.lightbox-group-edit {
+  margin-left: 4px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.lightbox-group-edit:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.lightbox-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  /* Reverse so we can use the :hover ~ trick to dim trailing stars */
+  flex-direction: row-reverse;
+}
+
+.lb-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: rgba(255,255,255,0.3);
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.lb-star svg {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.lb-star:hover { transform: scale(1.15); }
+.lb-star.active { color: #facc15; }
+
+/* Hover preview: hovering a star highlights itself + all stars to its right
+   in the DOM — but visually those are stars 1..N because we reversed the row. */
+.lightbox-rating:hover .lb-star { color: rgba(255,255,255,0.3); }
+.lightbox-rating .lb-star:hover,
+.lightbox-rating .lb-star:hover ~ .lb-star {
+  color: #facc15;
 }
 
 .lightbox-actions {

@@ -141,6 +141,12 @@
   <main class="main-content">
     <!-- Top Bar -->
     <div class="topbar">
+      <button class="back-btn" id="backToHomeBtn" style="display:none" title="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        <span id="backToHomeLabel">Back</span>
+      </button>
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
           <circle cx="11" cy="11" r="8"/>
@@ -155,6 +161,7 @@
             <option value="oldest">Oldest</option>
             <option value="name">Name</option>
             <option value="size">Size</option>
+            <option value="rating">Highest rated</option>
           </select>
         </div>
         <div class="view-toggle">
@@ -271,6 +278,26 @@
         </label>
         <input type="text" id="uploadLocation" placeholder="e.g. Tokyo, Japan" autocomplete="off">
       </div>
+      <div class="upload-group">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+          Group
+        </label>
+        <input type="text" id="uploadGroup" list="groupSuggestions" placeholder="e.g. Outfit A (optional)" autocomplete="off">
+        <datalist id="groupSuggestions"></datalist>
+      </div>
+      <div class="upload-group">
+        <label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+          Group
+        </label>
+        <input type="text" id="uploadGroup" list="groupSuggestions" placeholder="e.g. Outfit A (optional)" autocomplete="off">
+        <datalist id="groupSuggestions"></datalist>
+      </div>
       <div class="upload-progress" id="uploadProgress" style="display:none">
         <div class="progress-bar">
           <div class="progress-fill" id="progressFill"></div>
@@ -322,6 +349,27 @@
             <circle cx="12" cy="10" r="3"/>
           </svg>
           <span id="lightboxLocationText"></span>
+        </span>
+        <span class="lightbox-sep" id="lightboxGroupSep" style="display:none">|</span>
+        <span class="lightbox-group" id="lightboxGroup" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+          <span id="lightboxGroupText"></span>
+          <button class="lightbox-group-edit" id="lightboxGroupEditBtn" title="Edit group">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+        </span>
+        <span class="lightbox-sep">|</span>
+        <span class="lightbox-rating" id="lightboxRating">
+          <button class="lb-star" data-value="1" title="1 star"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button class="lb-star" data-value="2" title="2 stars"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button class="lb-star" data-value="3" title="3 stars"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button class="lb-star" data-value="4" title="4 stars"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button class="lb-star" data-value="5" title="5 stars"><svg viewBox="0 0 24 24" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
         </span>
       </div>
       <div class="lightbox-actions">
